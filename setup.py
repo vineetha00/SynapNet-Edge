@@ -3,8 +3,10 @@ from setuptools import setup, find_packages
 setup(
     name="synapnet-edge",
     version="0.1.0",
-    description="Hybrid long-context architecture (SSM + sparse attention + episodic memory) for consumer hardware",
-    author="SynapNet-Edge Authors",
+    description="Efficient long-context AI inference on consumer hardware — quantized hybrid SSM+attention+memory architecture reproducible in 25 minutes on a MacBook",
+    author="Vineetha Vallish Kumar",
+    license="MIT",
+    url="https://github.com/vineetha00/SynapNet-Edge",
     packages=find_packages(),
     python_requires=">=3.10",
     install_requires=[

@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use SynapNet-Edge in your research, please cite it as below."
+title: "SynapNet-Edge: Component-Aware Quantization and Budget-Aware Eviction for Hybrid Long-Context Models on Consumer Hardware"
+abstract: >-
+  SynapNet-Edge is a research framework for deploying hybrid SSM +
+  sparse-attention + episodic-memory architectures on consumer hardware.
+  It introduces Component-Aware Joint Quantization (CAJQ) — 2-bit QAT
+  for SSM layers, INT4 AWQ + SmoothQuant for sparse attention, INT8
+  per-entry for episodic memory — and Budget-Aware Episodic Eviction
+  (BAEE), a learned retention-classifier-driven eviction policy
+  compared head-to-head against H2O, Scissorhands, SnapKV, PyramidKV,
+  and Locret-style baselines.
+authors:
+  - family-names: "Vallish Kumar"
+    given-names: "Vineetha"
+type: software
+version: "0.1.0"
+date-released: "2026-05-18"
+license: MIT
+repository-code: "https://github.com/vineetha00/SynapNet-Edge"
+keywords:
+  - efficient machine learning
+  - quantization
+  - long-context inference
+  - state-space models
+  - sparse attention
+  - episodic memory
+  - edge deployment
+  - KV-cache eviction
+preferred-citation:
+  type: article
+  title: "SynapNet-Edge: Component-Aware Quantization and Budget-Aware Eviction for Hybrid Long-Context Models on Consumer Hardware"
+  authors:
+    - family-names: "Vallish Kumar"
+      given-names: "Vineetha"
+  year: 2026

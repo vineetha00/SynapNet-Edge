@@ -9,7 +9,7 @@ progressive compression pipeline:
                              via mean-pooling of a cluster.
   Stage 3 — Evicted:        Below-threshold entries removed entirely.
 
-The RetentionClassifier is a lightweight 3-layer MLP (≈8K parameters) trained
+The RetentionClassifier is a lightweight 3-layer MLP (~3.3K parameters) trained
 jointly with the main model via an auxiliary loss that encourages high retention
 scores for entries that were actually useful at read time (approximated by
 attention weight assigned during episodic memory read).
@@ -111,7 +111,8 @@ class RetentionClassifier(nn.Module):
 
     Output: scalar retention score in (0, 1).
 
-    Total parameters: ~8K for dim=256.  Runs in FP16.
+    Total parameters: ~3.3K for dim=192 (reference 8.7M model);
+    scales as (dim+4)*hidden + hidden*hidden + hidden.  Runs in FP16.
 
     Trained via an auxiliary loss:
       L_aux = -mean(attn_weight * log(retention_score)

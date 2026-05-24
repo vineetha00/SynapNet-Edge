@@ -1,8 +1,12 @@
 # SynapNet-Edge
 
-**Research-grade framework for deploying hybrid long-context architectures (SSM + sparse attention + episodic memory) on consumer hardware.**
+**Efficient long-context AI inference on consumer hardware — quantised hybrid SSM + sparse attention + episodic-memory architecture, reproducible end-to-end in ~25 minutes on a MacBook.**
 
-Built on top of SynapNet (Mitra et al.) with three novel contributions:
+📄 **Paper:** arXiv preprint — link coming soon
+🤗 **Checkpoints:** https://huggingface.co/vineethavc/synapnet-edge
+🧪 **Companion repo (base architecture):** `SynapNet_Exp`
+
+SynapNet-Edge is an original research framework. The base SynapNet architecture is developed in the companion repository [SynapNet_Exp].
 
 ---
 
@@ -14,33 +18,38 @@ Different quantization strategies per architectural component:
 
 | Component | Method | Bits | Rationale |
 |-----------|--------|------|-----------|
-| SSM layers | ParetoQ-style QAT | **2-bit** | Depthwise conv weights have near-Gaussian distributions; 2-bit with learned step size loses <1% accuracy |
-| Sparse attention | SmoothQuant + AWQ | **INT4** | Activation outliers are migrated to weights; group-wise quant handles variance |
-| Episodic memory | Per-entry symmetric | **INT8** | Per-slot scale absorbs entry diversity; 2× compression with <0.5% accuracy drop |
-| Interface layer | Learned FP16 LayerNorm + Linear | **FP16** | Absorbs scale mismatches between quantized pathways |
+| SSM layers | ParetoQ-style QAT | **2-bit** | Near-zero-mean depthwise weights; learned per-channel step size preserves accuracy |
+| Sparse attention | SmoothQuant + AWQ | **INT4** | Per-channel smoothing migrates activation outliers to weights; group-wise INT4 |
+| Episodic memory | Per-entry symmetric | **INT8** | Per-slot scale absorbs entry diversity |
+| Interface layer | FP16 ScaleBridge | **FP16** | Absorbs scale mismatches between mixed-precision pathways |
 
-**Key result:** CAJQ achieves 3.2× model compression vs FP16 baseline with <2% accuracy degradation on RULER NIAH at 8K context.
+**Compression** (measured at the 8.7M-param reference model): **4.4× compression on targeted SSM+attention parameters (0.60 MB vs 2.66 MB FP16-equivalent); 1.13× whole-model storage reduction** (FF, embeddings, and memory-projection layers remain FP16 in this configuration — extending CAJQ to FFs is straightforward future work).
+
+**Accuracy** (NIAH-single, mean ± std over 3 seeds, evaluated at 1024–4096 tokens): CAJQ-QAT reaches **0.674 ± 0.012 at ctx 1024, 0.590 ± 0.043 at ctx 2048, 0.521 ± 0.055 at ctx 4096**, matching or exceeding the FP16 reference at every evaluated context length and reducing seed variance ~2.6×.
 
 ### 2. Budget-Aware Episodic Eviction (BAEE)
 
-A lightweight retention-score classifier (~8K parameters) that progressively compresses memory entries under RAM constraints:
+A lightweight retention-score classifier (**~3.3K parameters**) that progressively compresses memory entries under RAM constraints:
 
 ```
 FP16 (hot) → INT8 (warm) → summary token (cold) → eviction
 ```
 
-- **RetentionClassifier**: 3-layer MLP trained jointly with main model via attention-weight supervision
-- **Budget enforcement**: triggers compression stages when total memory exceeds configurable threshold (default: 256 MB)
-- **vs FIFO/LRU**: BAEE retains semantically important entries regardless of recency; ablation shows +8% RULER accuracy at 32K context vs FIFO
+- **RetentionClassifier**: 3-layer MLP; validation ROC-AUC = **0.907 ± 0.005** (3 seeds), robust across a 10× learning-rate range and graceful under label noise.
+- **Budget enforcement**: triggers compression stages when total memory exceeds a configurable threshold (default: 256 MB).
+- **vs FIFO / LRU**: BAEE retains semantically important entries regardless of recency. Under 90% forced eviction with the target needle in the *early* portion of an 8K-token stream, BAEE retains the target **71% ± 8%** of the time vs **0%** for FIFO/LRU.
+- **vs learned KV-cache eviction**: head-to-head 432-cell grid against H2O, Scissorhands, SnapKV, PyramidKV, and a Locret-style proxy positions BAEE competitively across budget × position regimes (see `paper/figures/v3_fig_kv_policy_grid.pdf`).
 
 ### 3. Consumer Hardware Benchmarking Suite
 
-Full evaluation pipeline targeting:
-- **MacBook M-series** (Apple MPS backend)
-- **iPhone/iPad** via MLX or ExecuTorch export
-- **Raspberry Pi 5** (ARM CPU, NEON-optimised)
+Three hardware tiers profiled:
+- **Apple Silicon (MPS)** — measured directly
+- **Multi-thread CPU** — measured directly
+- **Single-thread CPU (Raspberry Pi 5 proxy)** — measured directly (real Pi 5 throughput would be ~1.5–2× lower per-core)
 
-Benchmarks: RULER (NIAH, variable tracking, frequency aggregation) + LongBench (6 task categories), both with self-contained synthetic data — no external downloads required.
+Metrics reported: parameter memory, on-disk storage, activation memory, episodic-store growth, runtime RSS, sustained throughput under 45-second thermal stress, and an energy/token estimate from `powermetrics` (with rated-TDP fallback).
+
+Benchmarks: RULER-style (NIAH, variable tracking, frequency aggregation) + LongBench-style (6 task categories) + NeedleBench-style (SNIA / MKN / RoN / CN / ADN), all with self-contained synthetic data — no external downloads required.
 
 ---
 
@@ -56,7 +65,7 @@ Token + Position Embedding
     │       │
     │       ├─ SimpleSSM (depthwise conv, 2-bit QAT)
     │       │
-    │       ├─ SparseEventAttention (INT4 AWQ+SmoothQuant)
+    │       ├─ SparseEventAttention (INT4 AWQ + SmoothQuant)
     │       │       └─ salience mask → BAEE scoring
     │       │
     │       ├─ WriteableMemory (INT8 per-entry)
@@ -74,10 +83,10 @@ LayerNorm → Head (classification or LM)
 ## Installation
 
 ```bash
-git clone <repo>
+git clone https://github.com/vineetha00/SynapNet-Edge
 cd SynapNet-Edge
 pip install -e .
-# With optional extras:
+# Optional extras:
 pip install -e ".[dev]"      # + psutil, pyyaml, scipy, tqdm
 pip install -e ".[mlx]"      # + Apple MLX for iPhone/Mac deployment
 pip install -e ".[full]"     # + HuggingFace datasets for real LongBench
@@ -87,41 +96,47 @@ pip install -e ".[full]"     # + HuggingFace datasets for real LongBench
 
 ## Quickstart
 
-### Train with CAJQ (3-phase QAT)
+### Pretrain the reference 8.7M model (~10 min on M-series MPS)
 
 ```bash
-python scripts/train_cajq.py \
-  --dim 256 --depth 6 --seq-len 2048 \
-  --warmup-epochs 3 --qat-epochs 10 \
-  --device mps   # or cuda / cpu
+python scripts/pretrain_scaled.py \
+  --dim 192 --depth 6 --heads 6 \
+  --curriculum 512 1024 \
+  --device mps
 ```
 
-### Evaluate all models
+### Train with CAJQ (3-phase QAT, ~15 min for 3 seeds)
 
 ```bash
-python scripts/eval_benchmarks.py \
-  --models all \
-  --device mps \
-  --seq-lengths 512 2048 8192 32768
+python scripts/exp_cajq_qat_multiseed.py \
+  --context-lengths 1024 2048 4096 \
+  --seeds 42 43 44 \
+  --device mps
 ```
 
-### Run ablations
+### Run BAEE grid vs all baselines (432 cells, ~35 min)
 
 ```bash
-# All three ablation axes
-python scripts/run_ablations.py --ablation all --epochs 8
-
-# Specific ablation
-python scripts/run_ablations.py --ablation B  # BAEE vs FIFO/LRU
+python scripts/exp_baee_grid_multiseed.py \
+  --policies baee_salience fifo lru random h2o scissorhands snapkv pyramidkv locret_proxy \
+  --budgets 0.10 0.20 0.30 0.50 \
+  --positions early late \
+  --seeds 42 43 44 \
+  --device mps
 ```
 
-### Generate paper figures
+### Hardware deployment profile (3 tiers, ~6 min)
 
 ```bash
-python scripts/plot_pareto.py \
-  --results results/benchmarks/pareto_points.json \
-  --output-dir paper/figures \
-  --format pdf
+python scripts/exp_deployment_metrics.py \
+  --tiers apple_silicon_mps cpu_multi cpu_single \
+  --variants fp16 int4_uniform cajq
+```
+
+### Generate all paper figures
+
+```bash
+python scripts/generate_paper_figures_v3.py
 ```
 
 ---
@@ -131,22 +146,22 @@ python scripts/plot_pareto.py \
 ```python
 from synapnet_edge import SynapNetEdge, SynapNetEdgeConfig, apply_cajq, BAEEMemoryManager
 from synapnet_edge.quantization.cajq import CAJQConfig
+from synapnet_edge.training.calibration import build_calib_loader
 
-# Build model
+# Build the reference 8.7M model
 cfg = SynapNetEdgeConfig(
-    dim=256, depth=6, vocab_size=32000, max_len=32768,
-    num_classes=64, heads=8, episodic_slots=16,
+    dim=192, depth=6, vocab_size=4096, max_len=8192,
+    num_classes=64, heads=6, episodic_slots=32,
 )
 model = SynapNetEdge(cfg)
 
-# Apply CAJQ quantization (PTQ mode, no further training needed)
-from synapnet_edge.training.calibration import build_calib_loader
-calib_loader = build_calib_loader(n_samples=128, seq_len=2048)
-cajq_cfg = CAJQConfig(device="mps")
-model = apply_cajq(model, cajq_cfg, calib_loader=calib_loader, mode="ptq")
+# Apply CAJQ quantization (PTQ; QAT entry point in scripts/exp_cajq_qat_multiseed.py)
+calib_loader = build_calib_loader(n_samples=128, seq_len=1024)
+model = apply_cajq(model, CAJQConfig(device="mps"),
+                    calib_loader=calib_loader, mode="ptq")
 
 # Streaming inference with BAEE
-manager = BAEEMemoryManager(dim=256, n_layers=6, budget_mb=256.0)
+manager = BAEEMemoryManager(dim=192, n_layers=6, budget_mb=256.0)
 logits, debug = model.forward_streaming(
     input_ids, chunk_size=512, baee_manager=manager
 )
@@ -159,92 +174,71 @@ logits, debug = model.forward_streaming(
 ```
 SynapNet-Edge/
 ├── synapnet_edge/
-│   ├── models/
-│   │   ├── ssm.py                   # SimpleSSM (2-bit QAT target)
-│   │   ├── sparse_attention.py      # SparseEventAttention (INT4 target)
-│   │   ├── episodic_memory.py       # WriteableMemory (INT8 target)
-│   │   ├── synapblock.py            # SynapBlockWithEpisodic + ScaleBridge
-│   │   └── synapnet_edge_model.py   # Full model + streaming forward
-│   ├── quantization/
-│   │   ├── cajq.py                  # apply_cajq() entry point
-│   │   ├── ssm_quantizer.py         # ParetoQ 2-bit QAT
-│   │   ├── attention_quantizer.py   # SmoothQuant + AWQ INT4
-│   │   ├── memory_quantizer.py      # INT8 per-entry
-│   │   └── scale_bridge.py          # ScaleBridge calibration
+│   ├── models/                          # SSM / SparseAttn / Episodic / SynapBlock / full model
+│   ├── quantization/                    # CAJQ + 2-bit / INT4 / INT8 / ScaleBridge
 │   ├── memory/
-│   │   └── baee.py                  # BAEEMemoryManager + RetentionClassifier
-│   ├── benchmarks/
-│   │   ├── ruler_bench.py           # RULER benchmark (synthetic)
-│   │   ├── longbench.py             # LongBench proxy (synthetic)
-│   │   ├── hardware_bench.py        # Latency + memory profiling
-│   │   └── pareto.py                # Pareto frontier analysis + plots
-│   ├── baselines/
-│   │   ├── mamba2_proxy.py          # Mamba-2 + uniform INT4
-│   │   ├── llama_awq_proxy.py       # Llama-3.2 + AWQ INT4
-│   │   ├── falcon_h1_proxy.py       # Falcon-H1/Hymba FP16
-│   │   └── em_llm.py                # EM-LLM FP16
-│   ├── training/
-│   │   ├── qat_trainer.py           # 3-phase QAT training loop
-│   │   └── calibration.py           # Calibration datasets
-│   └── utils/
-│       ├── profiling.py             # Model profiler, FLOPs estimator
-│       └── visualization.py         # Salience maps, training curves
-├── scripts/
-│   ├── train_cajq.py                # Full QAT training script
-│   ├── eval_benchmarks.py           # Evaluation + Pareto frontier
-│   ├── run_ablations.py             # All 3 ablation axes
-│   └── plot_pareto.py               # Paper figure generation
-├── configs/
-│   ├── cajq_config.yaml
-│   ├── baee_config.yaml
-│   └── benchmark_config.yaml
-└── paper/figures/                   # Auto-generated plots
+│   │   ├── baee.py                      # BAEEMemoryManager + RetentionClassifier (~3.3K params)
+│   │   └── kv_cache_policies.py         # H2O / Scissorhands / SnapKV / PyramidKV / Locret
+│   ├── benchmarks/                      # RULER / LongBench / hardware / Pareto
+│   ├── baselines/                       # Mamba-2 / Llama-AWQ / Falcon-H1 / EM-LLM proxies
+│   ├── training/                        # QAT trainer + calibration
+│   ├── data/long_context_tasks.py       # NIAH / MultiKey / VarTrack / FA / NeedleBench / MemPressure
+│   └── utils/                           # profiling + visualisation
+├── scripts/                             # 18 reproducible experiment scripts
+├── configs/                             # YAML configs for CAJQ / BAEE / benchmarks
+├── results/                             # JSON outputs for every experiment
+├── paper/figures/                       # 20+ publication-quality PDFs + v3 paper summary
+├── CITATION.cff                         # citation metadata
+├── LICENSE                              # MIT
+└── README.md
 ```
 
 ---
 
 ## Baselines
 
-| Model | Architecture | Bits | Notes |
-|-------|-------------|------|-------|
+| Model | Architecture | Bits | Role |
+|-------|-------------|------|------|
 | Mamba-2 (proxy) | GRU-SSM | INT4 uniform | Approximates Mamba-2 selective scan |
-| Llama-3.2 (proxy) | Full dense attention | INT4 AWQ | O(T²) cost |
-| Falcon-H1 / Hymba | Hybrid SSM+attention | FP16 | Upper-bound reference |
-| EM-LLM | Transformer + external memory | FP16 | Memory ablation baseline |
+| Llama-3.2 (proxy) | Full dense attention | INT4 AWQ | O(T²) cost reference |
+| Falcon-H1 / Hymba (proxy) | Hybrid SSM + attention | FP16 | Upper-bound hybrid reference |
+| EM-LLM | Transformer + external memory | FP16 | Memory-mechanism ablation |
+| H2O / Scissorhands / SnapKV / PyramidKV / Locret-proxy | KV-cache eviction policies | — | Eviction-policy baselines (BAEE comparison) |
 
 ---
 
 ## Ablations
 
-Three ablation axes in `scripts/run_ablations.py`:
-
-**A. Quantization strategy:**
-- FP16 baseline vs. Uniform INT4 vs. **CAJQ** (ours)
-
-**B. Eviction policy:**
-- **BAEE** (ours) vs. FIFO vs. LRU vs. Random
-
-**C. Scale bridge:**
-- With ScaleBridge vs. Without ScaleBridge
+- **Quantization strategy**: FP16 / Uniform INT8 / Uniform INT4 / CAJQ-PTQ / **CAJQ-QAT (ours)** — see `scripts/exp_cajq_qat_multiseed.py`
+- **Eviction policy**: **BAEE (ours)** / FIFO / LRU / Random / H2O / Scissorhands / SnapKV / PyramidKV / Locret — see `scripts/exp_baee_grid_multiseed.py`
+- **ScaleBridge**: post-hoc removal collapses accuracy (load-bearing in trained model); from-scratch comparison is inconclusive at our compute budget — see `scripts/exp_scale_bridge_ablation.py`
+- **Classifier stability**: seed × LR × label-noise grid — see `scripts/exp_classifier_stability.py`
 
 ---
 
 ## Citation
 
 ```bibtex
-@article{synapnet_edge_2025,
+@article{synapnet_edge_2026,
   title={SynapNet-Edge: Component-Aware Quantization and Budget-Aware Eviction for Hybrid Long-Context Models on Consumer Hardware},
-  author={},
-  year={2025},
+  author={Vallish Kumar, Vineetha},
+  year={2026},
 }
 ```
 
 ---
 
+## License
+
+Released under the [MIT License](LICENSE).
+
+---
+
 ## Acknowledgements
 
-Built on top of [SynapNet](../SynapNet_Exp/) (original architecture).
 Quantization methods inspired by [ParetoQ](https://arxiv.org/abs/2408.08296),
 [SmoothQuant](https://arxiv.org/abs/2211.10438), and [AWQ](https://arxiv.org/abs/2306.00978).
-Memory eviction inspired by [EM-LLM](https://arxiv.org/abs/2407.09450) and
-[MemGPT](https://arxiv.org/abs/2310.08560).
+Memory eviction inspired by [EM-LLM](https://arxiv.org/abs/2407.09450),
+[MemGPT](https://arxiv.org/abs/2310.08560), and the KV-cache compression line of work
+([H2O](https://arxiv.org/abs/2306.14048), [Scissorhands](https://arxiv.org/abs/2305.17118),
+[SnapKV](https://arxiv.org/abs/2404.14469), [PyramidKV](https://arxiv.org/abs/2406.02069)).
