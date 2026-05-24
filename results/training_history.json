@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "warmup",
+    "epoch": 1,
+    "train_loss": 4.534721659679039,
+    "eval_acc": 0.15384615384615385,
+    "lr": 0.0,
+    "elapsed_s": 5.0053911209106445
+  },
+  {
+    "phase": "qat",
+    "epoch": 1,
+    "train_loss": NaN,
+    "eval_acc": 0.0,
+    "lr": 0.0,
+    "elapsed_s": 7.374197006225586
+  },
+  {
+    "phase": "finetune",
+    "epoch": 1,
+    "train_loss": NaN,
+    "eval_acc": 0.0,
+    "lr": 0.0,
+    "elapsed_s": 6.904502868652344
+  }
+]

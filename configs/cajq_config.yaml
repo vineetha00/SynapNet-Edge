@@ -1,0 +1,51 @@
+# Component-Aware Joint Quantization (CAJQ) configuration
+# Paper: SynapNet-Edge — Contribution 1
+
+cajq:
+  # SSM (2-bit QAT, ParetoQ-style)
+  ssm_bits: 2
+  ssm_init_step: 0.1          # initial learned step size
+  ssm_step_reg: 1.0e-4        # L2 regularisation on step sizes
+
+  # Sparse attention (INT4 SmoothQuant + AWQ)
+  attn_bits: 4
+  attn_group_size: 128        # weight quantization group size
+  smooth_alpha: 0.5           # SmoothQuant migration exponent
+  salient_frac: 0.01          # fraction of channels kept in FP16 (AWQ salient)
+
+  # Episodic memory (INT8 per-entry, managed by BAEE)
+  mem_bits: 8
+
+  # Scale bridge
+  calibrate_bridge: true
+
+  # Calibration
+  n_calib_batches: 32
+  device: "cpu"               # override at runtime: mps, cuda
+
+model:
+  dim: 256
+  depth: 6
+  vocab_size: 32000
+  max_len: 32768
+  num_classes: 64
+  heads: 8
+  k_frac: 0.25
+  episodic_slots: 16
+  episodic_write_frac: 0.05
+  use_scale_bridge: true
+
+training:
+  warmup_epochs: 3
+  qat_epochs: 10
+  finetune_epochs: 2
+  batch_size: 4
+  lr_warmup: 1.0e-3
+  lr_qat: 5.0e-4
+  lr_finetune: 1.0e-4
+  weight_decay: 0.01
+  grad_clip: 1.0
+  lambda_qat_reg: 1.0e-4
+  lambda_baee: 0.1
+  lambda_sal_sup: 0.01
+  seed: 42

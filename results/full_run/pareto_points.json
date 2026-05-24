@@ -1,0 +1,52 @@
+[
+  {
+    "model_name": "Mamba2-INT4",
+    "accuracy": 0.125,
+    "latency_tok_s": 4853.4639690563445,
+    "memory_mb": 374.65625,
+    "context_len": 256,
+    "effective_bits": 16,
+    "method_family": "Mamba2",
+    "metadata": {}
+  },
+  {
+    "model_name": "Llama-AWQ-INT4",
+    "accuracy": 0.125,
+    "latency_tok_s": 211170.24583663393,
+    "memory_mb": 380.21875,
+    "context_len": 256,
+    "effective_bits": 16,
+    "method_family": "Llama",
+    "metadata": {}
+  },
+  {
+    "model_name": "FalconH1-FP16",
+    "accuracy": 0.125,
+    "latency_tok_s": 7348.921807528576,
+    "memory_mb": 404.875,
+    "context_len": 256,
+    "effective_bits": 16,
+    "method_family": "FalconH1",
+    "metadata": {}
+  },
+  {
+    "model_name": "EMLLM-FP16",
+    "accuracy": 0.125,
+    "latency_tok_s": 101812.86588273749,
+    "memory_mb": 403.921875,
+    "context_len": 256,
+    "effective_bits": 16,
+    "method_family": "EMLLM",
+    "metadata": {}
+  },
+  {
+    "model_name": "SynapNetEdge-CAJQ",
+    "accuracy": 0.1875,
+    "latency_tok_s": 14276.518988527052,
+    "memory_mb": 407.4375,
+    "context_len": 256,
+    "effective_bits": 9.013651877133105,
+    "method_family": "SynapNetEdge",
+    "metadata": {}
+  }
+]

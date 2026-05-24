@@ -1,0 +1,349 @@
+{
+  "cajq_training": {
+    "warmup": {
+      "name": "warmup",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.6222088245245128,
+          "acc": 0.5
+        },
+        {
+          "epoch": 2,
+          "loss": 1.6922430441929743,
+          "acc": 1.0
+        }
+      ],
+      "final_acc": 1.0
+    },
+    "qat": {
+      "name": "qat",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.498563152093154,
+          "acc": 0.19230769230769232
+        },
+        {
+          "epoch": 2,
+          "loss": 2.012648793367239,
+          "acc": 0.23076923076923078
+        },
+        {
+          "epoch": 3,
+          "loss": 1.5247958027399504,
+          "acc": 0.40384615384615385
+        }
+      ],
+      "final_acc": 0.40384615384615385
+    },
+    "finetune": {
+      "name": "finetune",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 1.2834300192502828,
+          "acc": 0.5
+        }
+      ],
+      "final_acc": 0.5
+    },
+    "n_params": 288146,
+    "effective_bits": 9.013651877133105,
+    "storage_mb": 0.080596923828125
+  },
+  "ruler": {
+    "niah_single": {
+      "128": {
+        "accuracy": 0.125,
+        "avg_latency_ms": 16.905459689951385,
+        "n_samples": 32
+      },
+      "256": {
+        "accuracy": 0.1875,
+        "avg_latency_ms": 30.502097648422932,
+        "n_samples": 32
+      }
+    },
+    "variable_track": {
+      "128": {
+        "accuracy": 0.0625,
+        "avg_latency_ms": 15.169005273492076,
+        "n_samples": 32
+      },
+      "256": {
+        "accuracy": 0.15625,
+        "avg_latency_ms": 28.882901060569566,
+        "n_samples": 32
+      }
+    },
+    "fa": {
+      "128": {
+        "accuracy": 0.0625,
+        "avg_latency_ms": 14.280036431955523,
+        "n_samples": 32
+      },
+      "256": {
+        "accuracy": 0.0,
+        "avg_latency_ms": 29.111053470842307,
+        "n_samples": 32
+      }
+    }
+  },
+  "longbench": {
+    "single_doc_qa": {
+      "128": {
+        "accuracy": 0.0625,
+        "n_samples": 32
+      },
+      "256": {
+        "accuracy": 0.09375,
+        "n_samples": 32
+      }
+    },
+    "multi_doc_qa": {
+      "128": {
+        "accuracy": 0.125,
+        "n_samples": 32
+      },
+      "256": {
+        "accuracy": 0.09375,
+        "n_samples": 32
+      }
+    },
+    "passage_retrieval": {
+      "128": {
+        "accuracy": 0.0625,
+        "n_samples": 32
+      },
+      "256": {
+        "accuracy": 0.09375,
+        "n_samples": 32
+      }
+    },
+    "aggregate_score": 0.08854166666666667
+  },
+  "hardware": [
+    {
+      "seq_len": 64,
+      "tokens_per_second": 4221.322612871627,
+      "median_latency_ms": 15.161125047598034,
+      "peak_memory_mb": 376.984375
+    },
+    {
+      "seq_len": 128,
+      "tokens_per_second": 8551.195638169507,
+      "median_latency_ms": 14.968667004723102,
+      "peak_memory_mb": 377.59375
+    },
+    {
+      "seq_len": 256,
+      "tokens_per_second": 16533.59597602845,
+      "median_latency_ms": 15.483625000342727,
+      "peak_memory_mb": 382.671875
+    }
+  ],
+  "baselines": {
+    "Mamba2-INT4": {
+      "final_train_acc": 1.0,
+      "ruler_niah_128": 0.125,
+      "ruler_niah_256": 0.125,
+      "tok_per_sec_256": 4853.4639690563445,
+      "peak_mem_mb_256": 374.65625
+    },
+    "Llama-AWQ-INT4": {
+      "final_train_acc": 1.0,
+      "ruler_niah_128": 0.125,
+      "ruler_niah_256": 0.125,
+      "tok_per_sec_256": 211170.24583663393,
+      "peak_mem_mb_256": 380.21875
+    },
+    "FalconH1-FP16": {
+      "final_train_acc": 1.0,
+      "ruler_niah_128": 0.125,
+      "ruler_niah_256": 0.125,
+      "tok_per_sec_256": 7348.921807528576,
+      "peak_mem_mb_256": 404.875
+    },
+    "EMLLM-FP16": {
+      "final_train_acc": 1.0,
+      "ruler_niah_128": 0.125,
+      "ruler_niah_256": 0.125,
+      "tok_per_sec_256": 101812.86588273749,
+      "peak_mem_mb_256": 403.921875
+    },
+    "SynapNetEdge-CAJQ": {
+      "final_train_acc": 0.5,
+      "ruler_niah_128": 0.125,
+      "ruler_niah_256": 0.1875,
+      "tok_per_sec_256": 14276.518988527052,
+      "peak_mem_mb_256": 407.4375
+    }
+  },
+  "ablations": {
+    "A_uniform_int4": {
+      "name": "uniform-INT4",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 1.129185147010363,
+          "acc": 1.0
+        },
+        {
+          "epoch": 2,
+          "loss": 0.8037565877804389,
+          "acc": 1.0
+        },
+        {
+          "epoch": 3,
+          "loss": 0.6169481988136585,
+          "acc": 0.9807692307692307
+        }
+      ],
+      "final_acc": 0.9807692307692307
+    },
+    "A_cajq": {
+      "name": "finetune",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 1.2834300192502828,
+          "acc": 0.5
+        }
+      ],
+      "final_acc": 0.5
+    },
+    "B_baee": {
+      "name": "Eviction-baee",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.6868358850479126,
+          "acc": 0.6923076923076923
+        },
+        {
+          "epoch": 2,
+          "loss": 1.6317275441609895,
+          "acc": 1.0
+        },
+        {
+          "epoch": 3,
+          "loss": 1.1210240859251757,
+          "acc": 1.0
+        }
+      ],
+      "final_acc": 1.0
+    },
+    "B_fifo": {
+      "name": "Eviction-fifo",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.5950737458008986,
+          "acc": 0.75
+        },
+        {
+          "epoch": 2,
+          "loss": 1.5636853117209215,
+          "acc": 0.9423076923076923
+        },
+        {
+          "epoch": 3,
+          "loss": 1.0486669838428497,
+          "acc": 0.9807692307692307
+        }
+      ],
+      "final_acc": 0.9807692307692307
+    },
+    "B_lru": {
+      "name": "Eviction-lru",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.669002863077017,
+          "acc": 0.6153846153846154
+        },
+        {
+          "epoch": 2,
+          "loss": 1.7222199394152715,
+          "acc": 1.0
+        },
+        {
+          "epoch": 3,
+          "loss": 1.1824876299271216,
+          "acc": 1.0
+        }
+      ],
+      "final_acc": 1.0
+    },
+    "B_random": {
+      "name": "Eviction-random",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.5544638633728027,
+          "acc": 0.9038461538461539
+        },
+        {
+          "epoch": 2,
+          "loss": 1.5374832107470586,
+          "acc": 1.0
+        },
+        {
+          "epoch": 3,
+          "loss": 1.040983484341548,
+          "acc": 1.0
+        }
+      ],
+      "final_acc": 1.0
+    },
+    "C_no_bridge": {
+      "name": "no-ScaleBridge",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.264014413723579,
+          "acc": 1.0
+        },
+        {
+          "epoch": 2,
+          "loss": 1.2371137807002435,
+          "acc": 1.0
+        },
+        {
+          "epoch": 3,
+          "loss": 0.7767696036742284,
+          "acc": 1.0
+        }
+      ],
+      "final_acc": 1.0
+    },
+    "C_with_bridge": {
+      "name": "with-ScaleBridge",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.653496788098262,
+          "acc": 0.5384615384615384
+        },
+        {
+          "epoch": 2,
+          "loss": 1.6811319039418147,
+          "acc": 0.9423076923076923
+        },
+        {
+          "epoch": 3,
+          "loss": 1.1856456284339612,
+          "acc": 1.0
+        }
+      ],
+      "final_acc": 1.0
+    }
+  },
+  "pareto_frontier": [
+    "Mamba2-INT4",
+    "Llama-AWQ-INT4",
+    "SynapNetEdge-CAJQ"
+  ],
+  "wall_time_s": 62.95366716384888
+}

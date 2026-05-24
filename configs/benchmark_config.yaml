@@ -1,0 +1,61 @@
+# Benchmark suite configuration for SynapNet-Edge paper
+
+# Context lengths to evaluate (tokens)
+context_lengths:
+  - 1024
+  - 4096
+  - 8192
+  - 16384
+  - 32768
+
+# RULER benchmark
+ruler:
+  tasks:
+    - niah_single
+    - niah_multi_key
+    - variable_track
+    - fa
+  n_samples: 500
+  num_classes: 64
+
+# LongBench
+longbench:
+  tasks:
+    - single_doc_qa
+    - multi_doc_qa
+    - summarization
+    - few_shot_icl
+    - code_completion
+    - passage_retrieval
+  n_samples: 200
+  num_classes: 16
+
+# Hardware profiling
+hardware:
+  n_warmup: 5
+  n_measure: 20
+  batch_size: 1
+  chunk_size: 512
+
+# Baseline models to compare against
+baselines:
+  - name: Mamba2-INT4
+    type: mamba2_proxy
+    quantized: true
+
+  - name: Llama-AWQ-INT4
+    type: llama_awq_proxy
+    quantized: true
+
+  - name: FalconH1-FP16
+    type: falcon_h1_proxy
+    quantized: false
+
+  - name: EMLLM-FP16
+    type: em_llm
+    quantized: false
+
+# Output
+output_dir: results/benchmarks
+figure_dir: paper/figures
+figure_format: pdf    # pdf | png | svg

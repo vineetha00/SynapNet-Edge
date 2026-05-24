@@ -1,0 +1,24 @@
+# SynapNet-Edge requirements
+# Core (required)
+torch>=2.2.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+
+# Optional: extended benchmarks
+psutil>=5.9.0           # memory profiling on MPS/CPU
+pyyaml>=6.0             # config file parsing
+
+# Optional: Apple Silicon / MLX deployment
+# mlx>=0.12.0           # uncomment for MLX export
+# mlx-lm>=0.0.1
+
+# Optional: mobile deployment
+# executorch>=0.1.0     # uncomment for ExecuTorch export
+
+# Development / analysis
+scipy>=1.10.0           # for Pareto dominance checks (optional)
+tqdm>=4.65.0            # progress bars
+
+# Evaluation datasets (optional, for real LongBench/RULER)
+# datasets>=2.18.0      # HuggingFace datasets for real LongBench
+# transformers>=4.40.0  # tokenizers for real text evaluation

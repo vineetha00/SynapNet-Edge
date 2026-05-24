@@ -1,0 +1,33 @@
+# Budget-Aware Episodic Eviction (BAEE) configuration
+# Paper: SynapNet-Edge — Contribution 2
+
+baee:
+  # Memory budget
+  budget_mb: 256.0            # total RAM budget for episodic memory (MB)
+  slots_per_layer: 16         # max memory slots per transformer layer
+
+  # Eviction policy: baee | fifo | lru | random
+  policy: "baee"
+
+  # Progressive compression thresholds
+  hot_threshold: 0.6          # retention score above this -> keep FP16
+  warm_threshold: 0.3         # between warm and hot -> compress to INT8
+  # Below warm_threshold -> summarize or evict
+
+  # Summary compression
+  summary_slots: 4            # number of summary tokens per evicted cluster
+
+  # Retention classifier
+  retention_clf:
+    hidden_dim: 32            # MLP hidden dim (~8K params for dim=256)
+    lambda_aux: 0.1           # weight of auxiliary retention loss
+
+  # Streaming inference
+  chunk_size: 512             # tokens per chunk during streaming inference
+
+# Ablation: compare BAEE against these policies
+ablation_policies:
+  - baee
+  - fifo
+  - lru
+  - random

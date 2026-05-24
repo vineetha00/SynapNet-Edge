@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+
+# Virtual environments (NEVER commit — install deps via requirements.txt)
+.venv/
+venv/
+env/
+ENV/
+
+# Model checkpoints (regenerate via scripts/pretrain_scaled.py)
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+results/130m/*.pt
+results/scaled/*.pt
+
+# Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.coverage
+htmlcov/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# Build artefacts
+build/
+dist/
+*.whl
+
+# Logs (keep .json / .md / .pdf results but drop verbose .log)
+*.log
+!README.md
+
+# Temporary / scratch
+tmp/
+temp/
+scratch/
+*.tmp

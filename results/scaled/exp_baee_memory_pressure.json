@@ -1,0 +1,124 @@
+{
+  "config": {
+    "ckpt": "results/scaled/base_model_fp16.pt",
+    "output": "results/scaled/exp_baee_memory_pressure.json",
+    "n_samples": 64,
+    "seq_lens": [
+      1024,
+      2048
+    ],
+    "chunk_size": 512,
+    "n_needles": 16,
+    "target_repeat": 3,
+    "budget_multiplier": 0.1,
+    "target_position_bias": "early",
+    "device": "mps",
+    "policies": [
+      "baee_salience",
+      "fifo",
+      "lru",
+      "random"
+    ],
+    "model_cfg": {
+      "dim": 192,
+      "depth": 6,
+      "vocab_size": 4096,
+      "max_len": 8192,
+      "num_classes": 64,
+      "heads": 6,
+      "k_frac": 0.25,
+      "episodic_slots": 32,
+      "episodic_write_frac": 0.05,
+      "mlp_ratio": 4.0,
+      "use_scale_bridge": true,
+      "ssm_bits": 2,
+      "attn_bits": 4,
+      "mem_bits": 8,
+      "ram_budget_fraction": 0.75
+    }
+  },
+  "experiments": [
+    {
+      "seq_len": 1024,
+      "n_chunks": 2,
+      "total_writes": 64,
+      "budget_slots": 6,
+      "forced_eviction_pct": 0.90625,
+      "policies": {
+        "baee_salience": {
+          "accuracy": 0.015625,
+          "n_samples": 64,
+          "eviction_count": 22272,
+          "target_retention_rate": 0.421875,
+          "policy": "baee_salience",
+          "wall_time_s": 9.061664542008657
+        },
+        "fifo": {
+          "accuracy": 0.015625,
+          "n_samples": 64,
+          "eviction_count": 22272,
+          "target_retention_rate": 0.0,
+          "policy": "fifo",
+          "wall_time_s": 8.75379070796771
+        },
+        "lru": {
+          "accuracy": 0.015625,
+          "n_samples": 64,
+          "eviction_count": 22272,
+          "target_retention_rate": 0.0,
+          "policy": "lru",
+          "wall_time_s": 8.631880583008751
+        },
+        "random": {
+          "accuracy": 0.0,
+          "n_samples": 64,
+          "eviction_count": 22272,
+          "target_retention_rate": 0.078125,
+          "policy": "random",
+          "wall_time_s": 8.935406582953874
+        }
+      }
+    },
+    {
+      "seq_len": 2048,
+      "n_chunks": 4,
+      "total_writes": 128,
+      "budget_slots": 12,
+      "forced_eviction_pct": 0.90625,
+      "policies": {
+        "baee_salience": {
+          "accuracy": 0.0625,
+          "n_samples": 64,
+          "eviction_count": 44544,
+          "target_retention_rate": 0.59375,
+          "policy": "baee_salience",
+          "wall_time_s": 17.011492040997837
+        },
+        "fifo": {
+          "accuracy": 0.03125,
+          "n_samples": 64,
+          "eviction_count": 44544,
+          "target_retention_rate": 0.0,
+          "policy": "fifo",
+          "wall_time_s": 17.462875915982295
+        },
+        "lru": {
+          "accuracy": 0.03125,
+          "n_samples": 64,
+          "eviction_count": 44544,
+          "target_retention_rate": 0.0,
+          "policy": "lru",
+          "wall_time_s": 17.274851082998794
+        },
+        "random": {
+          "accuracy": 0.046875,
+          "n_samples": 64,
+          "eviction_count": 44544,
+          "target_retention_rate": 0.03125,
+          "policy": "random",
+          "wall_time_s": 17.426460916001815
+        }
+      }
+    }
+  ]
+}

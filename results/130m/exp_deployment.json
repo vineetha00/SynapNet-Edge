@@ -1,0 +1,305 @@
+{
+  "config": {
+    "ckpt": "results/130m/base_model_fp16.pt",
+    "output": "results/130m/exp_deployment.json",
+    "context_lengths": [
+      512,
+      1024,
+      2048,
+      4096
+    ],
+    "variants": [
+      "fp16",
+      "int4_uniform",
+      "cajq"
+    ],
+    "tiers": [
+      "apple_silicon_mps",
+      "cpu_multi"
+    ]
+  },
+  "tiers": {
+    "apple_silicon_mps": {
+      "device": "mps",
+      "n_threads": 4,
+      "variants": {
+        "fp16": {
+          "effective_bits": 16.0,
+          "storage": {
+            "total_bytes": 239104148,
+            "total_mb": 228.02748489379883,
+            "breakdown_bytes": {
+              "ssm_2bit": 0,
+              "attn_int4": 0,
+              "int8": 0,
+              "fp16_default": 239104148
+            },
+            "breakdown_mb": {
+              "ssm_2bit": 0.0,
+              "attn_int4": 0.0,
+              "int8": 0.0,
+              "fp16_default": 228.02748489379883
+            }
+          },
+          "per_ctx": [
+            {
+              "ctx_len": 512,
+              "median_latency_ms": 80.03395900595933,
+              "tokens_per_second": 6397.284432248021,
+              "rss_start_mb": 1041.125,
+              "rss_end_mb": 1077.078125,
+              "delta_rss_mb": 35.953125
+            },
+            {
+              "ctx_len": 1024,
+              "median_latency_ms": 178.07079199701548,
+              "tokens_per_second": 5750.521961047731,
+              "rss_start_mb": 1077.328125,
+              "rss_end_mb": 1082.09375,
+              "delta_rss_mb": 4.765625
+            },
+            {
+              "ctx_len": 2048,
+              "median_latency_ms": 272.1361250150949,
+              "tokens_per_second": 7525.64548306992,
+              "rss_start_mb": 1082.28125,
+              "rss_end_mb": 654.4375,
+              "delta_rss_mb": 0
+            }
+          ]
+        },
+        "int4_uniform": {
+          "effective_bits": 4.00591589568304,
+          "storage": {
+            "total_bytes": 78358480,
+            "total_mb": 74.72846984863281,
+            "breakdown_bytes": {
+              "ssm_2bit": 0,
+              "attn_int4": 72987600,
+              "int8": 0,
+              "fp16_default": 5370880
+            },
+            "breakdown_mb": {
+              "ssm_2bit": 0.0,
+              "attn_int4": 69.60639953613281,
+              "int8": 0.0,
+              "fp16_default": 5.1220703125
+            }
+          },
+          "per_ctx": [
+            {
+              "ctx_len": 512,
+              "median_latency_ms": 136.65404205676168,
+              "tokens_per_second": 3746.6875644068523,
+              "rss_start_mb": 1138.296875,
+              "rss_end_mb": 814.171875,
+              "delta_rss_mb": 0
+            },
+            {
+              "ctx_len": 1024,
+              "median_latency_ms": 231.21379199437797,
+              "tokens_per_second": 4428.801548416709,
+              "rss_start_mb": 814.171875,
+              "rss_end_mb": 815.015625,
+              "delta_rss_mb": 0.84375
+            },
+            {
+              "ctx_len": 2048,
+              "median_latency_ms": 332.22679095342755,
+              "tokens_per_second": 6164.463721070268,
+              "rss_start_mb": 815.046875,
+              "rss_end_mb": 814.421875,
+              "delta_rss_mb": 0
+            }
+          ]
+        },
+        "cajq": {
+          "effective_bits": 13.81955422630492,
+          "storage": {
+            "total_bytes": 209627348,
+            "total_mb": 199.91621780395508,
+            "breakdown_bytes": {
+              "ssm_2bit": 1089600,
+              "attn_int4": 10547200,
+              "int8": 0,
+              "fp16_default": 197990548
+            },
+            "breakdown_mb": {
+              "ssm_2bit": 1.03912353515625,
+              "attn_int4": 10.05859375,
+              "int8": 0.0,
+              "fp16_default": 188.81850051879883
+            }
+          },
+          "per_ctx": [
+            {
+              "ctx_len": 512,
+              "median_latency_ms": 160.8805829891935,
+              "tokens_per_second": 3182.4847379773078,
+              "rss_start_mb": 268.703125,
+              "rss_end_mb": 213.0625,
+              "delta_rss_mb": 0
+            },
+            {
+              "ctx_len": 1024,
+              "median_latency_ms": 263.5877919383347,
+              "tokens_per_second": 3884.8536666658697,
+              "rss_start_mb": 213.21875,
+              "rss_end_mb": 213.78125,
+              "delta_rss_mb": 0.5625
+            },
+            {
+              "ctx_len": 2048,
+              "median_latency_ms": 374.95995801873505,
+              "tokens_per_second": 5461.916549227027,
+              "rss_start_mb": 213.953125,
+              "rss_end_mb": 214.671875,
+              "delta_rss_mb": 0.71875
+            }
+          ]
+        }
+      }
+    },
+    "cpu_multi": {
+      "device": "cpu",
+      "n_threads": 8,
+      "variants": {
+        "fp16": {
+          "effective_bits": 16.0,
+          "storage": {
+            "total_bytes": 239104148,
+            "total_mb": 228.02748489379883,
+            "breakdown_bytes": {
+              "ssm_2bit": 0,
+              "attn_int4": 0,
+              "int8": 0,
+              "fp16_default": 239104148
+            },
+            "breakdown_mb": {
+              "ssm_2bit": 0.0,
+              "attn_int4": 0.0,
+              "int8": 0.0,
+              "fp16_default": 228.02748489379883
+            }
+          },
+          "per_ctx": [
+            {
+              "ctx_len": 512,
+              "median_latency_ms": 340.7438750145957,
+              "tokens_per_second": 1502.5948741648506,
+              "rss_start_mb": 1133.203125,
+              "rss_end_mb": 1238.09375,
+              "delta_rss_mb": 104.890625
+            },
+            {
+              "ctx_len": 1024,
+              "median_latency_ms": 624.7999579645693,
+              "tokens_per_second": 1638.9245660897886,
+              "rss_start_mb": 1238.09375,
+              "rss_end_mb": 1379.140625,
+              "delta_rss_mb": 141.046875
+            },
+            {
+              "ctx_len": 2048,
+              "median_latency_ms": 941.7094589443877,
+              "tokens_per_second": 2174.7684283597537,
+              "rss_start_mb": 1379.140625,
+              "rss_end_mb": 1483.125,
+              "delta_rss_mb": 103.984375
+            }
+          ]
+        },
+        "int4_uniform": {
+          "effective_bits": 4.00591589568304,
+          "storage": {
+            "total_bytes": 78358480,
+            "total_mb": 74.72846984863281,
+            "breakdown_bytes": {
+              "ssm_2bit": 0,
+              "attn_int4": 72987600,
+              "int8": 0,
+              "fp16_default": 5370880
+            },
+            "breakdown_mb": {
+              "ssm_2bit": 0.0,
+              "attn_int4": 69.60639953613281,
+              "int8": 0.0,
+              "fp16_default": 5.1220703125
+            }
+          },
+          "per_ctx": [
+            {
+              "ctx_len": 512,
+              "median_latency_ms": 438.0422499962151,
+              "tokens_per_second": 1168.8370242925744,
+              "rss_start_mb": 1425.640625,
+              "rss_end_mb": 1426.4375,
+              "delta_rss_mb": 0.796875
+            },
+            {
+              "ctx_len": 1024,
+              "median_latency_ms": 716.191790997982,
+              "tokens_per_second": 1429.7846091939991,
+              "rss_start_mb": 1426.4375,
+              "rss_end_mb": 1487.71875,
+              "delta_rss_mb": 61.28125
+            },
+            {
+              "ctx_len": 2048,
+              "median_latency_ms": 1044.1885420586914,
+              "tokens_per_second": 1961.331615420931,
+              "rss_start_mb": 1487.71875,
+              "rss_end_mb": 1505.203125,
+              "delta_rss_mb": 17.484375
+            }
+          ]
+        },
+        "cajq": {
+          "effective_bits": 13.81955422630492,
+          "storage": {
+            "total_bytes": 209627348,
+            "total_mb": 199.91621780395508,
+            "breakdown_bytes": {
+              "ssm_2bit": 1089600,
+              "attn_int4": 10547200,
+              "int8": 0,
+              "fp16_default": 197990548
+            },
+            "breakdown_mb": {
+              "ssm_2bit": 1.03912353515625,
+              "attn_int4": 10.05859375,
+              "int8": 0.0,
+              "fp16_default": 188.81850051879883
+            }
+          },
+          "per_ctx": [
+            {
+              "ctx_len": 512,
+              "median_latency_ms": 363.04750002454966,
+              "tokens_per_second": 1410.283778198109,
+              "rss_start_mb": 1008.015625,
+              "rss_end_mb": 1011.828125,
+              "delta_rss_mb": 3.8125
+            },
+            {
+              "ctx_len": 1024,
+              "median_latency_ms": 651.944125071168,
+              "tokens_per_second": 1570.6867515497856,
+              "rss_start_mb": 1011.828125,
+              "rss_end_mb": 1014.09375,
+              "delta_rss_mb": 2.265625
+            },
+            {
+              "ctx_len": 2048,
+              "median_latency_ms": 948.5324170673266,
+              "tokens_per_second": 2159.1249420151694,
+              "rss_start_mb": 1014.09375,
+              "rss_end_mb": 1002.265625,
+              "delta_rss_mb": 0
+            }
+          ]
+        }
+      }
+    }
+  }
+}
