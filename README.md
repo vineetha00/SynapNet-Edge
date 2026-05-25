@@ -4,9 +4,9 @@
 
 📄 **Paper:** arXiv preprint — link coming soon
 🤗 **Checkpoints:** https://huggingface.co/vineethavc/synapnet-edge
-🧪 **Companion repo (base architecture):** `SynapNet_Exp`
+🧪 **Companion repo (base architecture):** [SynapNet_Exp](https://github.com/vineetha00/SynapNet_Exp)
 
-SynapNet-Edge is an original research framework. The base SynapNet architecture is developed in the companion repository [SynapNet_Exp].
+SynapNet-Edge is an original research framework. The base SynapNet architecture is developed in the companion repository [SynapNet_Exp](https://github.com/vineetha00/SynapNet_Exp).
 
 ---
 
