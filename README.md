@@ -3,7 +3,7 @@
 **Efficient long-context AI inference on consumer hardware — quantised hybrid SSM + sparse attention + episodic-memory architecture, reproducible end-to-end in ~25 minutes on a MacBook.**
 
 📄 **Paper:** arXiv preprint — link coming soon
-🤗 **Checkpoints:** https://huggingface.co/vineethavc/synapnet-edge
+🤗 **Checkpoints:** https://huggingface.co/vineetha00/synapnet-edge
 🧪 **Companion repo (base architecture):** [SynapNet_Exp](https://github.com/vineetha00/SynapNet_Exp)
 
 SynapNet-Edge is an original research framework. The base SynapNet architecture is developed in the companion repository [SynapNet_Exp](https://github.com/vineetha00/SynapNet_Exp).
