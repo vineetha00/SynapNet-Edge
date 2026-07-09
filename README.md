@@ -1,6 +1,13 @@
 # SynapNet-Edge
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Checkpoints](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-checkpoints-orange)](https://huggingface.co/Vineetha00/synapnet-edge)
+[![Cite](https://img.shields.io/badge/cite-CITATION.cff-green)](CITATION.cff)
+
 **Efficient long-context AI inference on consumer hardware — quantised hybrid SSM + sparse attention + episodic-memory architecture, reproducible end-to-end in ~25 minutes on a MacBook.**
+
+![CAJQ vs uniform quantization: CAJQ+QAT matches or exceeds the FP16 baseline at every evaluated context length while uniform INT8/INT4 degrade](paper/figures/v2_fig1_cajq_qat_long_context.png)
 
 📄 **Paper:** arXiv preprint — link coming soon
 🤗 **Checkpoints:** https://huggingface.co/Vineetha00/synapnet-edge
