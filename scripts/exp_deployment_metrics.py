@@ -42,6 +42,7 @@ from torch.utils.data import DataLoader
 from exp_cajq_long_context import (
     apply_uniform_int8, apply_uniform_int4, estimate_effective_bits,
 )
+from cajq_full import apply_cajq_full
 
 
 def rss_mb() -> float:
@@ -166,7 +167,7 @@ def build_variant(variant: str, ckpt: dict, config: dict, device: torch.device):
     elif variant == "int4_uniform":
         apply_uniform_int4(model, group_size=64)
         model.to(device)
-    elif variant == "cajq":
+    elif variant.startswith("cajq"):
         calib_ds = MultiTaskCurriculum(
             n_samples=32, seq_len=512,
             vocab_size=config["vocab_size"],
@@ -176,7 +177,22 @@ def build_variant(variant: str, ckpt: dict, config: dict, device: torch.device):
         cajq_cfg = CAJQConfig(n_calib_batches=8,
                               device=str(device).replace("cuda:0", "cuda"),
                               attn_group_size=64)
-        apply_cajq(model, cajq_cfg, calib_loader=calib, mode="ptq")
+        if variant == "cajq":
+            apply_cajq(model, cajq_cfg, calib_loader=calib, mode="ptq")
+        elif variant == "cajq_full_int8":
+            apply_cajq_full(model, cajq_cfg, calib_loader=calib, mode="ptq",
+                            rest_bits=8, keep_bridge_fp16=False)
+        elif variant == "cajq_full_int4":
+            apply_cajq_full(model, cajq_cfg, calib_loader=calib, mode="ptq",
+                            rest_bits=4, keep_bridge_fp16=False)
+        elif variant == "cajq_full_int8_safe":
+            apply_cajq_full(model, cajq_cfg, calib_loader=calib, mode="ptq",
+                            rest_bits=8, keep_bridge_fp16=True)
+        elif variant == "cajq_full_int4_safe":
+            apply_cajq_full(model, cajq_cfg, calib_loader=calib, mode="ptq",
+                            rest_bits=4, keep_bridge_fp16=True)
+        else:
+            raise ValueError(f"unknown cajq variant: {variant!r}")
         model.to(device)
     return model
 
