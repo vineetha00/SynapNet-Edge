@@ -1,0 +1,115 @@
+{
+  "experiment": "real_int8_onnxruntime",
+  "benchmarked_target": "full_model",
+  "benchmarked_target_description": "Full SynapNetEdge forward (embedding -> 6x[SSM + sparse-attn + episodic memory + ScaleBridge + FF] -> head), logits only",
+  "export_errors_before_fallback": {},
+  "model_params": 8714950,
+  "reference_config": {
+    "dim": 192,
+    "depth": 6,
+    "vocab_size": 4096,
+    "max_len": 8192,
+    "num_classes": 64,
+    "heads": 6,
+    "episodic_slots": 32
+  },
+  "seq_len": 1024,
+  "batch_size": 1,
+  "weight_type": "qint8",
+  "quant_format": "QOperator (dynamic: DynamicQuantizeLinear + MatMulInteger)",
+  "quantized_op_types": [
+    "MatMul",
+    "Gemm"
+  ],
+  "int8_graph_op_types": [
+    "Add",
+    "Cast",
+    "Concat",
+    "Constant",
+    "Conv",
+    "Div",
+    "DynamicQuantizeLinear",
+    "Erf",
+    "Gather",
+    "Identity",
+    "LayerNormalization",
+    "Log",
+    "MatMul",
+    "MatMulInteger",
+    "Mul",
+    "Pow",
+    "ReduceMean",
+    "Relu",
+    "Reshape",
+    "Shape",
+    "Sigmoid",
+    "Slice",
+    "Softmax",
+    "Squeeze",
+    "Sub",
+    "TopK",
+    "Transpose",
+    "Unsqueeze"
+  ],
+  "int8_graph_has_integer_kernels": true,
+  "fp32_vs_int8_logits": {
+    "pearson_r": 0.9849498368644065,
+    "max_abs_diff": 0.2039063721895218
+  },
+  "model_size_mb": {
+    "fp32": 29.398128,
+    "int8": 10.610765,
+    "ratio": 2.7705945801268803
+  },
+  "latency": {
+    "single_thread": {
+      "fp32": {
+        "mean_ms": 277.8175358194858,
+        "p50_ms": 273.01720800460316,
+        "p90_ms": 322.03879198641516,
+        "min_ms": 239.51995800598525,
+        "runs": 50,
+        "warmup": 10
+      },
+      "int8": {
+        "mean_ms": 180.1947967428714,
+        "p50_ms": 176.5447499928996,
+        "p90_ms": 201.64987500174902,
+        "min_ms": 158.58129199477844,
+        "runs": 50,
+        "warmup": 10
+      },
+      "speedup_mean": 1.5417622530794657,
+      "speedup_p50": 1.546447617477062
+    },
+    "default_threads": {
+      "fp32": {
+        "mean_ms": 155.56058086222038,
+        "p50_ms": 155.29608298675157,
+        "p90_ms": 164.54300002078526,
+        "min_ms": 142.75574998464435,
+        "runs": 50,
+        "warmup": 10
+      },
+      "int8": {
+        "mean_ms": 109.69782839878462,
+        "p50_ms": 107.97637500218116,
+        "p90_ms": 115.99716698401608,
+        "min_ms": 96.85699999681674,
+        "runs": 50,
+        "warmup": 10
+      },
+      "speedup_mean": 1.4180825922707498,
+      "speedup_p50": 1.4382413095791977
+    }
+  },
+  "platform": {
+    "machine": "arm64",
+    "system": "Darwin",
+    "processor": "arm",
+    "platform": "macOS-15.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.9",
+    "torch": "2.14.1",
+    "onnxruntime": "1.31.0"
+  }
+}
