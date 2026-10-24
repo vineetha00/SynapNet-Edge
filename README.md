@@ -58,6 +58,28 @@ Metrics reported: parameter memory, on-disk storage, activation memory, episodic
 
 Benchmarks: RULER-style (NIAH, variable tracking, frequency aggregation) + LongBench-style (6 task categories) + NeedleBench-style (SNIA / MKN / RoN / CN / ADN), all with self-contained synthetic data — no external downloads required.
 
+### Real INT8 kernels (ONNX Runtime)
+
+The CAJQ pipeline above uses *fake quantization* (quantize→dequantize in PyTorch), which measures accuracy effects faithfully but executes every matmul in floating point — so the quantized variants show no latency win. To demonstrate that the architecture actually gets faster on real integer kernels, `scripts/exp_real_int8_onnxruntime.py` exports the **full SynapNetEdge forward pass** (embedding → 6 × [SSM + sparse-attn + episodic memory + ScaleBridge + FF] → head) at the 8.7M-param reference dimensions (random-init weights — latency is independent of weight values) to ONNX and applies ONNX Runtime **dynamic INT8 quantization in QOperator format** (`DynamicQuantizeLinear` + `MatMulInteger`, weights QInt8) to all weight-bearing MatMul/Gemm ops; attention-score matmuls, softmax, LayerNorm and the depthwise SSM conv stay FP32 in both variants, so the speedup below is honest end-to-end, not a matmul microbench. Measured on Apple M3 (arm64 macOS), CPUExecutionProvider, batch 1, seq_len 1024, 10 warmup + 50 timed runs; the single-thread row (`intra_op_num_threads=1`) matches the repo's "Raspberry Pi proxy, single-thread CPU" methodology. FP32→INT8 logits Pearson r = 0.985.
+
+| Threads | FP32 mean (ms) | INT8 mean (ms) | FP32 p50 | INT8 p50 | FP32 p90 | INT8 p90 | Speedup (mean) |
+|---|---|---|---|---|---|---|---|
+| 1 (Pi proxy) | 277.82 | 180.19 | 273.02 | 176.54 | 322.04 | 201.65 | **1.54×** |
+| default | 155.56 | 109.70 | 155.30 | 107.98 | 164.54 | 116.00 | **1.42×** |
+
+Model file: **29.40 MB (FP32) → 10.61 MB (INT8)**, 2.77× smaller. Full details in `results/real_int8_onnxruntime.json` (includes the exact exported target, quantized op types, and platform).
+
+```bash
+# Reproduce (any machine):
+pip install torch onnx onnxruntime numpy
+python scripts/exp_real_int8_onnxruntime.py --runs 50 --seq-len 1024
+
+# On a Raspberry Pi (aarch64 Linux) — same script, no changes:
+python3 -m venv .venv && . .venv/bin/activate
+pip install torch onnx onnxruntime numpy
+python scripts/exp_real_int8_onnxruntime.py --runs 50 --seq-len 1024
+```
+
 ---
 
 ## Architecture

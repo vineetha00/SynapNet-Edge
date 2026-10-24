@@ -9,6 +9,7 @@ __pycache__/
 
 # Virtual environments (NEVER commit — install deps via requirements.txt)
 .venv/
+.venv-int8/
 venv/
 env/
 ENV/
@@ -21,6 +22,10 @@ ENV/
 *.safetensors
 results/130m/*.pt
 results/scaled/*.pt
+
+# Exported ONNX models (regenerate via scripts/exp_real_int8_onnxruntime.py)
+*.onnx
+results/onnx/
 
 # Caches
 .pytest_cache/
