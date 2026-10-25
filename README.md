@@ -7,7 +7,7 @@
 
 **Efficient long-context AI inference on consumer hardware — quantised hybrid SSM + sparse attention + episodic-memory architecture, reproducible end-to-end in ~25 minutes on a MacBook.**
 
-![CAJQ vs uniform quantization: CAJQ+QAT matches or exceeds the FP16 baseline at every evaluated context length while uniform INT8/INT4 degrade](paper/figures/v2_fig1_cajq_qat_long_context.png)
+![NIAH-single accuracy vs context length for FP16, uniform INT8/INT4, CAJQ-PTQ and CAJQ-QAT from the original 48-question run; see the fine-tune-matched re-check under Accuracy below](paper/figures/v2_fig1_cajq_qat_long_context.png)
 
 📄 **Paper:** arXiv preprint — link coming soon
 🤗 **Checkpoints:** https://huggingface.co/Vineetha00/synapnet-edge
@@ -30,9 +30,27 @@ Different quantization strategies per architectural component:
 | Episodic memory | Per-entry symmetric | **INT8** | Per-slot scale absorbs entry diversity |
 | Interface layer | FP16 ScaleBridge | **FP16** | Absorbs scale mismatches between mixed-precision pathways |
 
-**Compression** (measured at the 8.7M-param reference model): **4.4× compression on targeted SSM+attention parameters (0.60 MB vs 2.66 MB FP16-equivalent); 1.13× whole-model storage reduction** (FF, embeddings, and memory-projection layers remain FP16 in this configuration — extending CAJQ to FFs is straightforward future work).
+**Compression** (8.7M-param reference model, trained checkpoint, measured on a Raspberry Pi 4): the original CAJQ configuration gives **4.4× compression on the targeted SSM + attention parameters** (0.60 MB vs 2.66 MB FP16-equivalent) but only **1.13× whole-model**, because the FF, embedding, memory-projection and ScaleBridge layers stay FP16. **CAJQ-Full** (`scripts/cajq_full.py`) keeps the component-aware core and quantizes those remaining Linear layers too:
 
-**Accuracy** (NIAH-single, mean ± std over 3 seeds, evaluated at 1024–4096 tokens): CAJQ-QAT reaches **0.674 ± 0.012 at ctx 1024, 0.590 ± 0.043 at ctx 2048, 0.521 ± 0.055 at ctx 4096**, matching or exceeding the FP16 reference at every evaluated context length and reducing seed variance ~2.6×.
+| Variant | Whole-model on-disk | vs FP16 |
+|---|---|---|
+| FP16 | 16.60 MB | 1.00× |
+| CAJQ (original) | 15.06 MB | 1.10× |
+| **CAJQ-Full INT8** | **10.18 MB** | **1.63×** |
+| **CAJQ-Full INT4** | **8.35 MB** | **1.99×** |
+| CAJQ-Full INT8, ScaleBridge kept FP16 | 12.08 MB | 1.37× |
+| Uniform INT8 | 10.55 MB | 1.57× |
+| Uniform INT4 | 8.29 MB | 2.00× |
+
+At INT8, CAJQ-Full is smaller than uniform INT8 because attention stays at INT4; at INT4 it is a tie with uniform INT4, because the salience MLP stays FP16 and the 2-bit SSM's per-channel scales use up most of its saving. Sizes include the 3 MB FP16 learned positional embedding, which no variant quantizes and which the estimator in `exp_deployment_metrics.py` does not count. Raw data: `results/scaled/pi_cajq_full_trained.json`.
+
+**Accuracy** (`scripts/exp_cajq_full_accuracy.py`: 11 variants on the trained checkpoint, 3 seeds, NIAH-single and multi-task at 1024 / 2048 / 4096 tokens, 128 questions per task, identical questions for every variant, paired bootstrap 95% CIs):
+
+- **Post-training quantization costs no measurable accuracy.** Uniform INT8/INT4, CAJQ and CAJQ-Full INT8/INT4 are all within ±2 points of FP16 at every context length.
+- **The QAT gain is a fine-tuning effect.** The 200-step QAT recipe lifts FP16 itself by +4 to +9 points. Against an FP16 model fine-tuned with the same recipe, CAJQ-QAT matches rather than exceeds it (NIAH-single −0.023 [−0.044, −0.003] at 4K). An earlier version of this README reported CAJQ-QAT as "matching or exceeding FP16" against an FP16 baseline that had not been fine-tuned; that comparison mixed fine-tuning into the quantization result.
+- **Fully quantized models recover less from fine-tuning.** At 2–4K tokens, uniform INT4 and CAJQ-Full INT8/INT4 end 3.6–6.5 NIAH points below fine-tuned FP16, because their low-bit weights are frozen during the fine-tune. CAJQ-Full INT4 recovers slightly more than uniform INT4 (+1 to +2 points), but the CI only reaches zero at 2K.
+
+Raw data: `results/scaled/exp_cajq_full_accuracy.json`. The figure above is from the original 48-question run.
 
 ### 2. Budget-Aware Episodic Eviction (BAEE)
 
@@ -52,7 +70,8 @@ FP16 (hot) → INT8 (warm) → summary token (cold) → eviction
 Three hardware tiers profiled:
 - **Apple Silicon (MPS)** — measured directly
 - **Multi-thread CPU** — measured directly
-- **Single-thread CPU (Raspberry Pi 5 proxy)** — measured directly (real Pi 5 throughput would be ~1.5–2× lower per-core)
+- **Single-thread CPU (Raspberry Pi proxy)** — measured directly on an Apple M3 (real Pi throughput is lower per core)
+- **Raspberry Pi 4 (4× Cortex-A72, Raspberry Pi OS Lite 64-bit)** — measured directly on the trained checkpoint (`results/scaled/pi_cajq_full_trained.json`). The FP16 forward pass at 1024 tokens takes 2.04 s on 1 core and 1.30 s on 4 cores (1.56×). The PyTorch fake-quantized variants are *slower* than FP16 in every configuration (CAJQ-Full INT8 2–15%, CAJQ-Full INT4 5–18%, uniform INT4 up to 29%), and peak RSS stays ~320–385 MB for every variant: weights are dequantized to float on each pass and the PyTorch runtime, not the 8–17 MB of weights, dominates memory. See *Real INT8 kernels* below for the path to an actual speedup.
 
 Metrics reported: parameter memory, on-disk storage, activation memory, episodic-store growth, runtime RSS, sustained throughput under 45-second thermal stress, and an energy/token estimate from `powermetrics` (with rated-TDP fallback).
 
@@ -64,10 +83,12 @@ The CAJQ pipeline above uses *fake quantization* (quantize→dequantize in PyTor
 
 | Threads | FP32 mean (ms) | INT8 mean (ms) | FP32 p50 | INT8 p50 | FP32 p90 | INT8 p90 | Speedup (mean) |
 |---|---|---|---|---|---|---|---|
-| 1 (Pi proxy) | 277.82 | 180.19 | 273.02 | 176.54 | 322.04 | 201.65 | **1.54×** |
+| 1 (M3, single thread) | 277.82 | 180.19 | 273.02 | 176.54 | 322.04 | 201.65 | **1.54×** |
 | default | 155.56 | 109.70 | 155.30 | 107.98 | 164.54 | 116.00 | **1.42×** |
 
 Model file: **29.40 MB (FP32) → 10.61 MB (INT8)**, 2.77× smaller. Full details in `results/real_int8_onnxruntime.json` (includes the exact exported target, quantized op types, and platform).
+
+**Caveats.** (1) The Apple M3 has INT8 dot-product instructions (SDOT / I8MM) that the Raspberry Pi 4's Cortex-A72 (ARMv8.0) lacks, so the single-thread M3 row is an optimistic stand-in for a Pi; the speedup on a real Pi 4 has not been measured yet and is likely smaller. (2) The 2.77× file ratio is against FP32; against the FP16 baseline used elsewhere in this README it is about 1.4×. (3) The export uses a static `seq_len` of 1024, and the FP32 file is ~5.5 MB smaller than the model's full FP32 weights, consistent with the positional table being trimmed to 1024 positions — these files serve 1024-token inputs only. (4) The logit correlation was measured on random-init weights; INT8 task accuracy on the trained checkpoint has not been measured.
 
 ```bash
 # Reproduce (any machine):
@@ -159,7 +180,14 @@ python scripts/exp_baee_grid_multiseed.py \
 ```bash
 python scripts/exp_deployment_metrics.py \
   --tiers apple_silicon_mps cpu_multi cpu_single \
-  --variants fp16 int4_uniform cajq
+  --variants fp16 int8_uniform int4_uniform cajq cajq_full_int8 cajq_full_int4
+```
+
+### CAJQ-Full accuracy re-check (11 variants incl. fine-tune-matched FP16 control, ~2 h on M-series MPS)
+
+```bash
+bash scripts/run_cajq_full_accuracy.sh smoke   # ~3 min sanity check
+bash scripts/run_cajq_full_accuracy.sh full    # 3 seeds x ctx 1024/2048/4096, runs in background
 ```
 
 ### Generate all paper figures
@@ -238,10 +266,20 @@ SynapNet-Edge/
 
 ## Ablations
 
-- **Quantization strategy**: FP16 / Uniform INT8 / Uniform INT4 / CAJQ-PTQ / **CAJQ-QAT (ours)** — see `scripts/exp_cajq_qat_multiseed.py`
+- **Quantization strategy**: FP16 / Uniform INT8 / Uniform INT4 / CAJQ-PTQ / **CAJQ-QAT (ours)** / **CAJQ-Full INT8 / INT4 (ours)**, each with and without the same 200-step fine-tune, against a fine-tune-matched FP16 control — see `scripts/exp_cajq_full_accuracy.py` (original run: `scripts/exp_cajq_qat_multiseed.py`)
 - **Eviction policy**: **BAEE (ours)** / FIFO / LRU / Random / H2O / Scissorhands / SnapKV / PyramidKV / Locret — see `scripts/exp_baee_grid_multiseed.py`
 - **ScaleBridge**: post-hoc removal collapses accuracy (load-bearing in trained model); from-scratch comparison is inconclusive at our compute budget — see `scripts/exp_scale_bridge_ablation.py`
 - **Classifier stability**: seed × LR × label-noise grid — see `scripts/exp_classifier_stability.py`
+
+---
+
+## Limitations
+
+- **No speed or RAM win on the Raspberry Pi 4 from PyTorch fake-quant.** Real INT8 kernels (ONNX Runtime) give a speedup on Apple M3 but have not been measured on the Pi yet.
+- **Fine-tuning freezes the quantized weights**, which is why fully quantized models recover less from QAT. Straight-through fake-quant for the FF layers is future work.
+- **The size estimator skips the positional embedding.** The numbers above add it back; the script itself is not fixed yet.
+- **The `ScaleBridge kept FP16` variants' accuracy is unmeasured**, so that compromise is priced in MB but not yet in accuracy.
+- **Synthetic benchmarks only.** NIAH multi-key sits near 0.1 for every variant, so it cannot separate them; standard long-context suites (RULER, LongBench) are future work.
 
 ---
 
